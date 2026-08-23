@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-custom-medium hover:-translate-y-1;
+  }
+  
+  .btn-secondary {
+    @apply bg-accent-400 hover:bg-accent-500 text-gray-900 px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-custom-medium hover:-translate-y-1;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl shadow-custom-light hover:shadow-custom-medium transition-all duration-300 hover:-translate-y-2;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent;
+  }
+  
+  .bg-gradient-primary {
+    @apply bg-gradient-to-br from-primary-500 to-primary-600;
+  }
+  
+  .bg-gradient-accent {
+    @apply bg-gradient-to-br from-accent-400 to-accent-500;
+  }
+}
+
+/* Truck marker animation */
+.truck-marker {
+  transition: transform 0.1s ease-out;
+}
+
+.truck-marker:hover {
+  transform: scale(1.1);
+}

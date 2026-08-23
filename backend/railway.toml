@@ -1,0 +1,10 @@
+# Railway Deployment Configuration
+# Root directory should be set to: HerbalTrace/backend in Railway dashboard
+
+[build]
+  builder = "NIXPACKS"
+
+[deploy]
+  startCommand = "npm start"
+  healthcheckPath = "/"
+  healthcheckTimeout = 100

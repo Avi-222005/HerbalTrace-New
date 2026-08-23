@@ -1,0 +1,14 @@
+const db = require('better-sqlite3')('./data/herbaltrace.db');
+console.log('Database connected');
+const users = db.prepare('SELECT COUNT(*) as count FROM users').get();
+console.log('Users:', users.count);
+const requests = db.prepare('SELECT COUNT(*) as count FROM registration_requests').get();
+console.log('Registration requests:', requests.count);
+const batches = db.prepare('SELECT COUNT(*) as count FROM batches').get();
+console.log('Batches:', batches.count);
+const products = db.prepare('SELECT COUNT(*) as count FROM products').get();
+console.log('Products:', products.count);
+const qcTests = db.prepare('SELECT COUNT(*) as count FROM qc_tests').get();
+console.log('QC Tests:', qcTests.count);
+const collections = db.prepare('SELECT COUNT(*) as count FROM collection_events_cache').get();
+console.log('Collections:', collections.count);

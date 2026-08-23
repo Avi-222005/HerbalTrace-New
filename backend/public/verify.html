@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Verification - HerbalTrace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 50%, #ffffff 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #1b5e20;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(27, 94, 32, 0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        }
+        
+        .header .logo {
+            font-size: 3em;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+        
+        .header p {
+            font-size: 1.15em;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 80px 30px;
+        }
+        
+        .loading .spinner {
+            width: 70px;
+            height: 70px;
+            border: 5px solid #e8f5e9;
+            border-top: 5px solid #2e7d32;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 25px;
+        }
+        
+        .loading p {
+            font-size: 1.1em;
+            color: #558b2f;
+            font-weight: 500;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .verified-badge {
+            text-align: center;
+            padding: 35px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 16px;
+            margin-bottom: 35px;
+            border: 3px solid #66bb6a;
+        }
+        
+        .verified-badge .icon {
+            width: 90px;
+            height: 90px;
+            background: #2e7d32;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 3.5em;
+            color: white;
+            box-shadow: 0 8px 20px rgba(46, 125, 50, 0.3);
+        }
+        
+        .verified-badge h2 {
+            color: #1b5e20;
+            font-size: 1.8em;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        
+        .verified-badge p {
+            color: #33691e;
+            font-size: 1.05em;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 28px;
+            background: #fafafa;
+            border-radius: 16px;
+            border-left: 5px solid #66bb6a;
+        }
+        
+        .section h3 {
+            color: #2e7d32;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 14px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #558b2f;
+            font-size: 0.95em;
+        }
+        
+        .info-value {
+            color: #1b5e20;
+            text-align: right;
+            font-weight: 500;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 50px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #66bb6a, #aed581);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transition: transform 0.2s;
+        }
+        
+        .timeline-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -42px;
+            top: 28px;
+            width: 20px;
+            height: 20px;
+            background: #2e7d32;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 0 0 3px #66bb6a;
+            z-index: 1;
+        }
+        
+        .timeline-item h4 {
+            color: #2e7d32;
+            margin-bottom: 8px;
+            font-size: 1.15em;
+            font-weight: 600;
+        }
+        
+        .timeline-item p {
+            color: #558b2f;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .timeline-item small {
+            color: #7cb342;
+            font-size: 0.85em;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 80px 30px;
+        }
+        
+        .error .icon {
+            width: 90px;
+            height: 90px;
+            background: #ffebee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 3.5em;
+            color: #c62828;
+        }
+        
+        .error h2 {
+            color: #b71c1c;
+            margin-bottom: 12px;
+            font-size: 1.6em;
+        }
+        
+        .error p {
+            color: #d32f2f;
+            font-size: 1.05em;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-success {
+            background: #c8e6c9;
+            color: #1b5e20;
+        }
+        
+        .badge-warning {
+            background: #fff9c4;
+            color: #f57f17;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .info-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .info-value {
+                text-align: left;
+            }
+            
+            .timeline {
+                padding-left: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🌿</div>
+            <h1>HerbalTrace</h1>
+            <p>Authentic Herbal Products with Complete Traceability</p>
+        </div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Verifying product authenticity...</p>
+        </div>
+        
+        <div id="content" class="content" style="display: none;"></div>
+    </div>
+    
+    <script>
+        // Get QR code from URL
+        const pathParts = window.location.pathname.split('/');
+        const qrCode = pathParts[pathParts.length - 1];
+        
+        console.log('QR Code:', qrCode);
+        console.log('Fetching from:', `/api/v1/qr/verify/${qrCode}`);
+        
+        // Fetch verification data
+        fetch(`/api/v1/qr/verify/${qrCode}`)
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Data received:', data);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+                if (data.success) {
+                    displayVerifiedProduct(data.data);
+                } else {
+                    displayError(data.message || 'Product not found');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                displayError('Unable to verify product. Please try again.');
+            });
+        
+        function displayVerifiedProduct(data) {
+            const content = document.getElementById('content');
+            const product = data.product;
+            const batch = data.batch;
+            const collections = data.collections || [];
+            const qcTests = data.qualityTests || [];
+            
+            console.log('Displaying product:', product);
+            console.log('Batch:', batch);
+            console.log('Collections:', collections);
+            
+            content.innerHTML = `
+                <div class="verified-badge">
+                    <div class="icon">✓</div>
+                    <h2>Authentic Product Verified</h2>
+                    <p>This product's authenticity has been confirmed through our blockchain traceability system</p>
+                </div>
+                
+                <div class="section">
+                    <h3>📦 Product Information</h3>
+                    <div class="info-row">
+                        <span class="info-label">Product Name</span>
+                        <span class="info-value"><strong>${product.name}</strong></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Product Type</span>
+                        <span class="info-value"><span class="badge badge-success">${product.type.toUpperCase()}</span></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Net Quantity</span>
+                        <span class="info-value">${product.quantity} ${product.unit}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Manufactured On</span>
+                        <span class="info-value">${new Date(product.manufactureDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Best Before</span>
+                        <span class="info-value">${new Date(product.expiryDate).toLocaleDateString('en-US', {year: 'numeric', month: 'long', day: 'numeric'})}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Manufacturer</span>
+                        <span class="info-value">${product.manufacturer || 'HerbalTrace Manufacturer'}</span>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>🌾 Source Batch Details</h3>
+                    <div class="info-row">
+                        <span class="info-label">Batch Number</span>
+                        <span class="info-value"><strong>${batch.batchNumber}</strong></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Herb Species</span>
+                        <span class="info-value">${batch.species}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Total Batch Quantity</span>
+                        <span class="info-value">${batch.totalQuantity} ${batch.unit}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Farmer Collections</span>
+                        <span class="info-value">${collections.length} certified sources</span>
+                    </div>
+                </div>
+                
+                ${collections.length > 0 ? `
+                <div class="section">
+                    <h3>👨‍🌾 Farm Origin Traceability</h3>
+                    ${collections.map((col, idx) => `
+                        <div class="info-row">
+                            <span class="info-label">Source ${idx + 1}</span>
+                            <span class="info-value">${col.farmerName || 'Certified Farmer'} • ${col.quantity} ${col.unit} • ${new Date(col.harvestDate).toLocaleDateString()}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                ` : ''}
+                
+                ${qcTests.length > 0 ? `
+                <div class="section">
+                    <h3>🔬 Quality Certifications</h3>
+                    ${qcTests.map((test, idx) => `
+                        <div class="info-row">
+                            <span class="info-label">${test.testType || test.test_type}</span>
+                            <span class="info-value">
+                                <span class="badge ${test.result === 'PASS' ? 'badge-success' : 'badge-warning'}">
+                                    ${test.result}
+                                </span>
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+                ` : ''}
+                
+                <div class="section">
+                    <h3>📋 Complete Traceability Journey</h3>
+                    <div class="timeline">
+                        ${collections.length > 0 ? `
+                        <div class="timeline-item">
+                            <h4>🌱 Farm Collection</h4>
+                            <p>${collections.length} collection(s) from certified organic farmers</p>
+                            <small>📅 ${new Date(collections[0].harvestDate).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})}</small>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="timeline-item">
+                            <h4>📦 Batch Processing</h4>
+                            <p>Batch ${batch.batchNumber} created with ${batch.totalQuantity} ${batch.unit} of ${batch.species}</p>
+                            <small>📅 ${new Date(batch.createdAt).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})}</small>
+                        </div>
+                        
+                        ${qcTests.length > 0 ? `
+                        <div class="timeline-item">
+                            <h4>🔬 Quality Control Testing</h4>
+                            <p>${qcTests.length} comprehensive quality test(s) completed and passed</p>
+                            <small>📅 ${new Date(qcTests[0].completedAt || qcTests[0].createdAt).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})}</small>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="timeline-item">
+                            <h4>🏭 Manufacturing</h4>
+                            <p>${product.name} manufactured and packaged with quality assurance</p>
+                            <small>📅 ${new Date(product.manufactureDate).toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})}</small>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <h4>✅ Product Verified</h4>
+                            <p>Product verified authentic and ready for consumer distribution</p>
+                            <small>📅 ${new Date().toLocaleDateString('en-US', {year: 'numeric', month: 'short', day: 'numeric'})}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function displayError(message) {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div class="error">
+                    <div class="icon">⚠️</div>
+                    <h2>Verification Failed</h2>
+                    <p>${message}</p>
+                    <p style="margin-top: 20px; font-size: 0.9em;">Please check the QR code and try again.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

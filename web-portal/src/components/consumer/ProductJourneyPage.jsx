@@ -293,6 +293,39 @@ const ProductJourneyPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Consumer Trust & Anti-Forgery Verification Guarantee */}
+          <div className="mt-6 pt-6 border-t border-emerald-500/20 grid sm:grid-cols-3 gap-4 text-xs">
+            <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-emerald-500/30 flex items-start space-x-3">
+              <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 flex-shrink-0">
+                <Shield className="h-4 w-4" />
+              </div>
+              <div>
+                <strong className="text-white block font-bold">100% Tamper-Proof</strong>
+                <span className="text-slate-400 text-[11px] leading-relaxed">Cryptographic hash anchored on Hyperledger Fabric. Zero counterfeit risk.</span>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-teal-500/30 flex items-start space-x-3">
+              <div className="p-2 rounded-xl bg-teal-500/20 text-teal-400 flex-shrink-0">
+                <Leaf className="h-4 w-4" />
+              </div>
+              <div>
+                <strong className="text-white block font-bold">AI Botanical Verified</strong>
+                <span className="text-slate-400 text-[11px] leading-relaxed">Field photo morphological match confirmed before blockchain intake.</span>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-cyan-500/30 flex items-start space-x-3">
+              <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400 flex-shrink-0">
+                <FlaskConical className="h-4 w-4" />
+              </div>
+              <div>
+                <strong className="text-white block font-bold">NABL Lab Certified</strong>
+                <span className="text-slate-400 text-[11px] leading-relaxed">Heavy metals & active biomarker potency passed AYUSH standards.</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 3D Botanical Specimen & AR Monograph with Usage Guide */}

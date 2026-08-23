@@ -43,7 +43,7 @@ import {
 } from 'lucide-react'
 import DashboardNavbar from '../common/DashboardNavbar'
 import ComplaintModal from '../common/ComplaintModal'
-import OfflineGsmTerminalModal from './OfflineGsmTerminalModal'
+import { analyzeBotanicalImage } from '../../services/aiBotanicalValidator'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000'
 
@@ -63,7 +63,6 @@ const FarmerLandingPage = () => {
   const [isLoadingCollections, setIsLoadingCollections] = useState(false)
   const [collectionsError, setCollectionsError] = useState('')
   const [showNewCollectionModal, setShowNewCollectionModal] = useState(false)
-  const [showGsmModal, setShowGsmModal] = useState(false)
   const [userData, setUserData] = useState(null)
   const [batches, setBatches] = useState([])
   const [alerts, setAlerts] = useState([])
@@ -351,15 +350,6 @@ const FarmerLandingPage = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowGsmModal(true)}
-                  className="bg-emerald-800/90 hover:bg-emerald-900 text-white px-4 py-2.5 rounded-xl font-bold flex items-center space-x-2 border border-emerald-400/40 text-xs shadow-md"
-                >
-                  <Radio className="h-4 w-4 text-emerald-300 animate-pulse" />
-                  <span>Offline GSM / USSD (*99#)</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                   onClick={() => setShowComplaintModal(true)}
                   className="bg-red-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center space-x-2 hover:bg-red-600 transition-colors text-sm md:text-base shadow-md"
                 >
@@ -542,23 +532,6 @@ const FarmerLandingPage = () => {
           <ComplaintModal 
             role="Farmer"
             onClose={() => setShowComplaintModal(false)} 
-          />
-        )}
-        {showGsmModal && (
-          <OfflineGsmTerminalModal 
-            isOpen={showGsmModal}
-            isDark={theme === 'dark'}
-            onClose={() => setShowGsmModal(false)}
-            onSyncComplete={() => {
-              const token = localStorage.getItem('herbaltrace_token')
-              if (token) {
-                fetch(`${BACKEND_URL}/api/v1/collections?limit=50`, {
-                  headers: { Authorization: `Bearer ${token}` }
-                }).then(res => res.json()).then(result => {
-                  if (result.success) setCollections(result.data || [])
-                })
-              }
-            }}
           />
         )}
       </AnimatePresence>
@@ -844,533 +817,6 @@ const SustainabilityScore = ({ isDark }) => (
     </div>
   </div>
 )
-
-// Modal Components
-const NewCollectionModal = ({ location, onClose, onSuccess }) => {
-  const [formData, setFormData] = useState({
-    herbalSpecies: '',
-    commonName: '',
-    scientificName: '',
-    quantity: '',
-    unit: 'kg',
-    harvestDate: new Date().toISOString().split('T')[0],
-    harvestTime: '',
-    harvestMethod: 'Manual Harvesting',
-    partCollected: 'Whole Plant',
-    latitude: location?.latitude?.toString() || '',
-    longitude: location?.longitude?.toString() || '',
-    altitude: '',
-    gpsAccuracy: '',
-    locationName: '',
-    weatherConditions: '',
-    soilType: '',
-    moistureContent: '',
-    temperature: '',
-    additionalNotes: ''
-  })
-  const [images, setImages] = useState([])
-  const [isCapturingLocation, setIsCapturingLocation] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState('')
-
-  const herbalSpeciesOptions = [
-    'Ashwagandha (Withania somnifera)',
-    'Turmeric (Curcuma longa)',
-    'Brahmi (Bacopa monnieri)',
-    'Tulsi (Ocimum sanctum)',
-    'Neem (Azadirachta indica)',
-    'Aloe Vera (Aloe barbadensis)',
-    'Ginger (Zingiber officinale)',
-    'Giloy (Tinospora cordifolia)',
-    'Amla (Phyllanthus emblica)',
-    'Shatavari (Asparagus racemosus)'
-  ]
-
-  const unitOptions = ['kg', 'g', 'lb', 'oz']
-  const harvestMethodOptions = ['manual', 'mechanical', 'semi-mechanical', 'selective']
-  const partCollectedOptions = ['whole_plant', 'leaves', 'roots', 'flowers', 'seeds', 'bark', 'fruits', 'rhizome']
-  const weatherOptions = ['Sunny', 'Cloudy', 'Partly Cloudy', 'Rainy', 'Drizzle', 'Windy', 'Humid']
-  const soilTypeOptions = ['Loamy', 'Clay', 'Sandy', 'Silt', 'Peaty', 'Chalky', 'Red Soil', 'Black Soil', 'Alluvial']
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    setSubmitError('')
-  }
-
-  const captureCurrentLocation = () => {
-    setIsCapturingLocation(true)
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setFormData(prev => ({
-            ...prev,
-            latitude: position.coords.latitude.toFixed(6),
-            longitude: position.coords.longitude.toFixed(6),
-            altitude: position.coords.altitude ? position.coords.altitude.toFixed(2) : '',
-            gpsAccuracy: position.coords.accuracy ? position.coords.accuracy.toFixed(2) : ''
-          }))
-          setIsCapturingLocation(false)
-        },
-        (error) => {
-          console.error('Error capturing location:', error)
-          setIsCapturingLocation(false)
-        },
-        { enableHighAccuracy: true }
-      )
-    }
-  }
-
-  const handleImageUpload = (e) => {
-    const files = Array.from(e.target.files)
-    if (images.length + files.length <= 5) {
-      const newImages = files.map(file => ({
-        file,
-        preview: URL.createObjectURL(file),
-        name: file.name
-      }))
-      setImages(prev => [...prev, ...newImages])
-    }
-  }
-
-  const removeImage = (index) => {
-    setImages(prev => prev.filter((_, i) => i !== index))
-  }
-
-  // Submit collection to backend
-  const handleSubmit = async () => {
-    // Validate required fields
-    if (!formData.herbalSpecies || !formData.quantity || !formData.latitude || !formData.longitude || !formData.harvestDate) {
-      setSubmitError('Please fill required fields: Species, Quantity, Location (GPS), Harvest Date')
-      return
-    }
-
-    const token = localStorage.getItem('herbaltrace_token')
-    if (!token) {
-      setSubmitError('Please sign in first')
-      return
-    }
-
-    setIsSubmitting(true)
-    setSubmitError('')
-
-    try {
-      // Parse species name (format: "Common Name (Scientific Name)")
-      const speciesMatch = formData.herbalSpecies.match(/^(.+?)\s*\((.+?)\)$/)
-      const commonName = speciesMatch ? speciesMatch[1].trim() : formData.herbalSpecies
-      const scientificName = speciesMatch ? speciesMatch[2].trim() : (formData.scientificName || '')
-
-      const payload = {
-        species: commonName,
-        commonName: formData.commonName || commonName,
-        scientificName: formData.scientificName || scientificName,
-        quantity: parseFloat(formData.quantity),
-        unit: formData.unit,
-        latitude: parseFloat(formData.latitude),
-        longitude: parseFloat(formData.longitude),
-        altitude: formData.altitude ? parseFloat(formData.altitude) : undefined,
-        accuracy: formData.gpsAccuracy ? parseFloat(formData.gpsAccuracy) : undefined,
-        harvestDate: formData.harvestDate,
-        harvestMethod: formData.harvestMethod,
-        partCollected: formData.partCollected,
-        weatherConditions: formData.weatherConditions || undefined,
-        soilType: formData.soilType || undefined,
-        images: [] // Would need image upload handling
-      }
-
-      const response = await fetch(`${BACKEND_URL}/api/v1/collections`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      })
-
-      const result = await response.json()
-      
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || 'Failed to create collection')
-      }
-
-      // Success - call onSuccess callback and close modal
-      if (onSuccess) onSuccess(result.data)
-      onClose()
-    } catch (error) {
-      console.error('Collection submit error:', error)
-      setSubmitError(error.message || 'Failed to submit collection')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Record Collection Event</h2>
-          
-          <div className="space-y-6">
-            {/* Herbal Species */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Herbal Species <span className="text-red-500">*</span>
-              </label>
-              <select 
-                value={formData.herbalSpecies}
-                onChange={(e) => handleInputChange('herbalSpecies', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">Select Species</option>
-                {herbalSpeciesOptions.map(species => (
-                  <option key={species} value={species}>{species}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Common Name & Scientific Name */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Common Name</label>
-                <input 
-                  type="text" 
-                  value={formData.commonName}
-                  onChange={(e) => handleInputChange('commonName', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                  placeholder="e.g., Indian Ginseng" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Scientific Name</label>
-                <input 
-                  type="text" 
-                  value={formData.scientificName}
-                  onChange={(e) => handleInputChange('scientificName', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                  placeholder="e.g., Withania somnifera" 
-                />
-              </div>
-            </div>
-
-            {/* Quantity & Unit */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quantity <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  type="number" 
-                  step="0.01"
-                  value={formData.quantity}
-                  onChange={(e) => handleInputChange('quantity', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                  placeholder="0.00" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Unit</label>
-                <select 
-                  value={formData.unit}
-                  onChange={(e) => handleInputChange('unit', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  {unitOptions.map(unit => (
-                    <option key={unit} value={unit}>{unit}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Harvest Date & Time */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Harvest Date <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  type="date" 
-                  value={formData.harvestDate}
-                  onChange={(e) => handleInputChange('harvestDate', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Harvest Time</label>
-                <input 
-                  type="time" 
-                  value={formData.harvestTime}
-                  onChange={(e) => handleInputChange('harvestTime', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                />
-              </div>
-            </div>
-
-            {/* Harvest Method & Part Collected */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Harvest Method <span className="text-red-500">*</span>
-                </label>
-                <select 
-                  value={formData.harvestMethod}
-                  onChange={(e) => handleInputChange('harvestMethod', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  {harvestMethodOptions.map(method => (
-                    <option key={method} value={method}>{method}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Part Collected <span className="text-red-500">*</span>
-                </label>
-                <select 
-                  value={formData.partCollected}
-                  onChange={(e) => handleInputChange('partCollected', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  {partCollectedOptions.map(part => (
-                    <option key={part} value={part}>{part}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* GPS Location Section */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                GPS Location <span className="text-red-500">*</span>
-              </label>
-              <button 
-                type="button"
-                onClick={captureCurrentLocation}
-                disabled={isCapturingLocation}
-                className="mb-4 bg-green-600 text-white px-4 py-2.5 rounded-lg font-medium flex items-center space-x-2 hover:bg-green-700 transition-colors disabled:opacity-50"
-              >
-                <Navigation className="h-4 w-4" />
-                <span>{isCapturingLocation ? 'Capturing...' : 'Capture Current Location'}</span>
-              </button>
-              
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <input 
-                    type="text" 
-                    value={formData.latitude}
-                    onChange={(e) => handleInputChange('latitude', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                    placeholder="Latitude" 
-                  />
-                </div>
-                <div>
-                  <input 
-                    type="text" 
-                    value={formData.longitude}
-                    onChange={(e) => handleInputChange('longitude', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                    placeholder="Longitude" 
-                  />
-                </div>
-              </div>
-              
-              <div className="grid md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <input 
-                    type="text" 
-                    value={formData.altitude}
-                    onChange={(e) => handleInputChange('altitude', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                    placeholder="Altitude (meters)" 
-                  />
-                </div>
-                <div>
-                  <input 
-                    type="text" 
-                    value={formData.gpsAccuracy}
-                    onChange={(e) => handleInputChange('gpsAccuracy', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                    placeholder="GPS Accuracy (meters)" 
-                  />
-                </div>
-              </div>
-              
-              <div className="mt-4">
-                <input 
-                  type="text" 
-                  value={formData.locationName}
-                  onChange={(e) => handleInputChange('locationName', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                  placeholder="Location Name (e.g., Farm Name, Village)" 
-                />
-              </div>
-            </div>
-
-            {/* Weather & Soil Type */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Weather Conditions</label>
-                <select 
-                  value={formData.weatherConditions}
-                  onChange={(e) => handleInputChange('weatherConditions', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">Select Weather</option>
-                  {weatherOptions.map(weather => (
-                    <option key={weather} value={weather}>{weather}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Soil Type</label>
-                <select 
-                  value={formData.soilType}
-                  onChange={(e) => handleInputChange('soilType', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                >
-                  <option value="">Select Soil Type</option>
-                  {soilTypeOptions.map(soil => (
-                    <option key={soil} value={soil}>{soil}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Moisture Content & Temperature */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Moisture Content (%)</label>
-                <input 
-                  type="number" 
-                  step="0.1"
-                  value={formData.moistureContent}
-                  onChange={(e) => handleInputChange('moistureContent', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                  placeholder="0.0" 
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Temperature (°C)</label>
-                <input 
-                  type="number" 
-                  step="0.1"
-                  value={formData.temperature}
-                  onChange={(e) => handleInputChange('temperature', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                  placeholder="0.0" 
-                />
-              </div>
-            </div>
-
-            {/* Harvest Images */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Harvest Images <span className="text-red-500">*</span> <span className="text-gray-500 font-normal">(Max 5)</span>
-              </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer">
-                <input 
-                  type="file" 
-                  accept="image/png,image/jpeg" 
-                  multiple 
-                  onChange={handleImageUpload}
-                  className="hidden" 
-                  id="image-upload"
-                  disabled={images.length >= 5}
-                />
-                <label htmlFor="image-upload" className="cursor-pointer">
-                  <Upload className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-700 font-medium">Click to upload images</p>
-                  <p className="text-sm text-gray-500 mt-1">PNG, JPG up to 10MB</p>
-                </label>
-              </div>
-              
-              {images.length > 0 && (
-                <div className="grid grid-cols-5 gap-2 mt-4">
-                  {images.map((img, index) => (
-                    <div key={index} className="relative aspect-square">
-                      <img 
-                        src={img.preview} 
-                        alt={`Upload ${index + 1}`} 
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Additional Notes */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
-              <textarea 
-                value={formData.additionalNotes}
-                onChange={(e) => handleInputChange('additionalNotes', e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" 
-                rows="3" 
-                placeholder="Any additional information about the harvest..."
-              />
-            </div>
-
-            {/* Error Message */}
-            {submitError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
-                <AlertTriangle className="h-5 w-5 mr-2" />
-                <span>{submitError}</span>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Action Buttons */}
-        <div className="flex space-x-3 p-6 pt-0">
-          <button 
-            onClick={onClose} 
-            disabled={isSubmitting}
-            className="flex-1 bg-gray-200 text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-300 transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <motion.button 
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="flex-1 bg-green-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? (
-              <>
-                <RefreshCw className="h-5 w-5 animate-spin" />
-                <span>Submitting...</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle className="h-5 w-5" />
-                <span>Record Collection</span>
-              </>
-            )}
-          </motion.button>
-        </div>
-      </motion.div>
-    </motion.div>
-  )
-}
 
 const EventDetailModal = ({ event, onClose }) => (
   <motion.div
@@ -1732,6 +1178,81 @@ const NewCollectionFormModal = ({ location, locationLoading, locationError, onRe
                 <option value="seeds">Seeds</option>
                 <option value="whole_plant">Whole Plant</option>
               </select>
+            </div>
+          </div>
+
+          {/* AI Botanical Image Verification */}
+          <div className="border border-emerald-500/30 bg-emerald-50/50 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+                <Camera className="h-4 w-4 text-emerald-600" />
+                <span>AI Botanical Harvest Photo *</span>
+              </label>
+              {aiResult && (
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  aiResult.isValid ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-red-100 text-red-800 border border-red-300'
+                }`}>
+                  {aiResult.isValid ? `${aiResult.confidence}% Match` : 'Invalid Plant Photo'}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-start gap-3">
+              {imagePreview ? (
+                <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-emerald-300 flex-shrink-0">
+                  <img src={imagePreview} alt="Harvest preview" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImagePreview(null)
+                      setAiResult(null)
+                    }}
+                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-0.5 hover:bg-red-700"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-24 h-24 rounded-lg border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-white flex flex-col items-center justify-center cursor-pointer flex-shrink-0 transition-colors"
+                >
+                  <Camera className="h-6 w-6 text-emerald-600 mb-1" />
+                  <span className="text-[10px] font-semibold text-emerald-700">Add Photo</span>
+                </div>
+              )}
+
+              <input 
+                ref={fileInputRef}
+                type="file" 
+                accept="image/png,image/jpeg,image/webp" 
+                onChange={handleImageChange}
+                className="hidden" 
+              />
+
+              <div className="flex-1 text-xs space-y-1">
+                {isAnalyzingImage ? (
+                  <div className="p-2.5 bg-emerald-100/60 rounded-lg text-emerald-900 flex items-center space-x-2">
+                    <RefreshCw className="h-4 w-4 animate-spin text-emerald-600 flex-shrink-0" />
+                    <span>Running AI Botanical Morphology Assay...</span>
+                  </div>
+                ) : aiResult ? (
+                  <div className={`p-2.5 rounded-lg text-xs ${
+                    aiResult.isValid ? 'bg-emerald-100/80 text-emerald-900 border border-emerald-200' : 'bg-red-100/80 text-red-900 border border-red-200'
+                  }`}>
+                    <p className="font-bold">{aiResult.isValid ? '✅ Verified Botanical Specimen' : '❌ Non-Botanical Image'}</p>
+                    <p className="text-[11px] mt-0.5 opacity-90">{aiResult.message}</p>
+                    {aiResult.details?.biomarkerAssay && (
+                      <p className="text-[10px] text-emerald-700 mt-1 font-mono">{aiResult.details.biomarkerAssay}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-zinc-500 text-[11px]">
+                    <p className="font-semibold text-zinc-700">AI Plant Morphology Scanner</p>
+                    <p className="mt-0.5">Upload a photo of the freshly harvested leaves/roots. The AI verifies plant species purity before blockchain submission.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

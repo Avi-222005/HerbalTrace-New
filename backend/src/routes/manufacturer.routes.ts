@@ -182,10 +182,8 @@ router.post('/products', authenticate, authorize('Admin', 'Manufacturer'), async
     }
 
     // 3. Generate QR code image BEFORE saving to database
-    // Dynamically resolve frontend host for authentic mobile scanning
-    const reqHost = req.get('host') || 'localhost:3000';
-    const clientHost = reqHost.includes(':3000') ? reqHost.replace(':3000', ':5173') : reqHost;
-    const frontendBaseUrl = process.env.FRONTEND_URL || `${req.protocol}://${clientHost}`;
+    // Dynamically resolve frontend host for authentic scanning
+    const frontendBaseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
     const verificationUrl = `${frontendBaseUrl}/verify/${qrCode}`;
     
     const qrPayloadTemp = {

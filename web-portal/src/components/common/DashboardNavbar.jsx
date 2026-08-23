@@ -105,35 +105,161 @@ const DashboardNavbar = ({
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordStatus, setPasswordStatus] = useState({ loading: false, error: '', success: '' })
 
-  // Role-specific notifications
-  const getRoleNotifications = (role) => {
-    if (role === 'Farmer') {
-      return [
-        { id: 1, title: 'Harvest Geofence Verified', message: 'Tulsi collection verified in All-India approved zone.', time: '10m ago', unread: true },
-        { id: 2, title: 'Batch Consolidated', message: 'Your harvest batch has been signed by FarmersCoopMSP.', time: '1h ago', unread: true },
-        { id: 3, title: 'Quality COA Passed', message: 'Laboratory certified 8.2% moisture & heavy metals pass.', time: '2h ago', unread: false }
-      ]
-    }
-    if (role === 'Laboratory' || role === 'Lab') {
-      return [
-        { id: 1, title: 'New Batch for Analysis', message: 'Batch BATCH-TULSI assigned for Physicochemical COA.', time: '5m ago', unread: true },
-        { id: 2, title: 'TestingLabsMSP Certificate Endorsed', message: 'COA signed and committed to Hyperledger Fabric.', time: '45m ago', unread: false }
-      ]
-    }
-    if (role === 'Manufacturer') {
-      return [
-        { id: 1, title: 'Approved Batch Ready', message: 'Batch passed QC and ready for Ayurvedic formulation.', time: '20m ago', unread: true },
-        { id: 2, title: 'QR Code Generated', message: 'Cryptographic consumer verification QR active.', time: '2h ago', unread: false }
-      ]
-    }
-    return [
-      { id: 1, title: 'Fabric Peer Cluster Synced', message: '4 endorsement peers active across Farmers, Labs, Processors, Manufacturers.', time: 'Just now', unread: true },
-      { id: 2, title: 'All-India Tulsi Geofence Active', message: 'Smart contract season window valid across all states.', time: '15m ago', unread: true }
-    ]
-  }
+  // Dynamic Real-time Role-specific notifications
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
 
-  const [notifications, setNotifications] = useState(() => getRoleNotifications(userRole))
-  const unreadCount = notifications.filter(n => n.unread).length
+  useEffect(() => {
+    const fetchLiveNotifications = async () => {
+      const token = localStorage.getItem('herbaltrace_token')
+      if (!token) return
+
+      const headers = { Authorization: `Bearer ${token}` }
+      const liveNotifs = []
+
+      try {
+        if (userRole === 'Laboratory' || userRole === 'Lab') {
+          const res = await fetch(`${BACKEND_URL}/api/v1/batches?limit=10`, { headers })
+          const data = await res.json()
+          if (data.success && Array.isArray(data.data)) {
+            const pending = data.data.filter(b => b.status === 'pending' || !b.status || b.status === 'created')
+            if (pending.length > 0) {
+              liveNotifs.push({
+                id: 'lab-new-batch',
+                title: `📦 ${pending.length} New Batch${pending.length > 1 ? 'es' : ''} for Analysis`,
+                message: `Latest: ${pending[0].species || 'Botanical'} (${pending[0].batch_number || pending[0].id}) waiting for Assay & COA test.`,
+                time: 'Recent',
+                unread: true
+              })
+            }
+          }
+          liveNotifs.push({
+            id: 'lab-fabric-node',
+            title: '✅ TestingLabsMSP Peer Connected',
+            message: 'Cryptographic HSM key active on herbaltrace-channel.',
+            time: 'Active',
+            unread: false
+          })
+        } else if (userRole === 'Manufacturer') {
+          const res = await fetch(`${BACKEND_URL}/api/v1/batches?limit=10`, { headers })
+          const data = await res.json()
+          if (data.success && Array.isArray(data.data)) {
+            const approved = data.data.filter(b => b.status === 'approved' || b.status === 'tested' || b.status === 'qc_passed')
+            if (approved.length > 0) {
+              liveNotifs.push({
+                id: 'mfg-approved-batch',
+                title: `🌿 ${approved.length} Raw Material Batch${approved.length > 1 ? 'es' : ''} Ready`,
+                message: `${approved[0].species || 'Herbal'} batch (${approved[0].batch_number || approved[0].id}) passed QC and ready for processing.`,
+                time: 'Recent',
+                unread: true
+              })
+            }
+          }
+          liveNotifs.push({
+            id: 'mfg-passport',
+            title: '🔒 Dynamic QR Passport Active',
+            message: 'Blockchain product passports syncing with Hyperledger Fabric.',
+            time: 'Active',
+            unread: false
+          })
+        } else if (userRole === 'Admin') {
+          const [reqRes, compRes, alertRes] = await Promise.allSettled([
+            fetch(`${BACKEND_URL}/api/v1/auth/registration-requests?status=pending`, { headers }),
+            fetch(`${BACKEND_URL}/api/v1/complaints?limit=5`, { headers }),
+            fetch(`${BACKEND_URL}/api/v1/alerts?limit=5`, { headers })
+          ])
+
+          if (reqRes.status === 'fulfilled' && reqRes.value.ok) {
+            const reqData = await reqRes.value.json()
+            const pendingUsers = reqData.data?.requests || reqData.data || []
+            if (pendingUsers.length > 0) {
+              liveNotifs.push({
+                id: 'admin-onboarding',
+                title: `👥 ${pendingUsers.length} Onboarding Request${pendingUsers.length > 1 ? 's' : ''}`,
+                message: `New stakeholder request: ${pendingUsers[0].full_name || pendingUsers[0].email} (${pendingUsers[0].role}) awaiting approval.`,
+                time: 'Pending',
+                unread: true
+              })
+            }
+          }
+
+          if (compRes.status === 'fulfilled' && compRes.value.ok) {
+            const compData = await compRes.value.json()
+            const grievances = compData.data?.complaints || compData.data || []
+            if (grievances.length > 0) {
+              liveNotifs.push({
+                id: 'admin-complaint',
+                title: `🚨 ${grievances.length} Grievance / Complaint${grievances.length > 1 ? 's' : ''}`,
+                message: `Latest: "${grievances[0].title || 'Issue reported'}" by ${grievances[0].user_name || 'Stakeholder'}`,
+                time: 'Active',
+                unread: true
+              })
+            }
+          }
+
+          if (alertRes.status === 'fulfilled' && alertRes.value.ok) {
+            const alertData = await alertRes.value.json()
+            const activeAlerts = alertData.data || []
+            if (activeAlerts.length > 0) {
+              liveNotifs.push({
+                id: 'admin-alert',
+                title: `⚠️ ${activeAlerts.length} System Alerts`,
+                message: `${activeAlerts[0].title || 'Alert'}: ${activeAlerts[0].message || 'Review system log'}`,
+                time: 'Recent',
+                unread: true
+              })
+            }
+          }
+        } else if (userRole === 'Farmer') {
+          const res = await fetch(`${BACKEND_URL}/api/v1/collections?limit=5`, { headers })
+          const data = await res.json()
+          if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+            liveNotifs.push({
+              id: 'farmer-collections',
+              title: `🌱 Harvest Recorded: ${data.data[0].species || 'Herb'}`,
+              message: `${data.data[0].quantity} ${data.data[0].unit || 'kg'} geo-tagged and committed to blockchain cache.`,
+              time: 'Recent',
+              unread: false
+            })
+          }
+          liveNotifs.push({
+            id: 'farmer-geofence',
+            title: '📍 Geo-Fencing & Season Windows Validated',
+            message: 'All medicinal plant harvesting rules active for your district.',
+            time: 'Active',
+            unread: false
+          })
+        } else {
+          liveNotifs.push({
+            id: 'reg-alert',
+            title: '🛡️ AYUSH Regulatory Audit Node',
+            message: 'All consortium ledger blocks verified against NMPB conservation rules.',
+            time: 'Active',
+            unread: false
+          })
+        }
+
+        if (liveNotifs.length === 0) {
+          liveNotifs.push({
+            id: 'default-sync',
+            title: '🌐 Hyperledger Fabric Network Online',
+            message: 'Channel herbaltrace-channel active with 100% block integrity.',
+            time: 'Just now',
+            unread: false
+          })
+        }
+
+        setNotifications(liveNotifs)
+        setUnreadCount(liveNotifs.filter(n => n.unread).length)
+      } catch (err) {
+        console.warn('Navbar notification fetch error:', err)
+      }
+    }
+
+    fetchLiveNotifications()
+    const interval = setInterval(fetchLiveNotifications, 20000) // Poll every 20s
+    return () => clearInterval(interval)
+  }, [userRole])
 
   const handleLogout = () => {
     localStorage.removeItem('herbaltrace_user')

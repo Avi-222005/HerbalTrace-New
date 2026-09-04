@@ -17,11 +17,11 @@ const stateOptions = [
   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
   'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
   'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
-  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi'
 ]
 
 export const indianStateDistricts = {
-  'Uttar Pradesh': ['Greater Noida', 'Noida', 'Lucknow', 'Varanasi', 'Prayagraj', 'Kanpur', 'Agra', 'Meerut', 'Gorakhpur', 'Bareilly', 'Aligarh', 'Moradabad', 'Mathura', 'Jhansi'],
+  'Uttar Pradesh': ['Gautam Buddha Nagar (Noida / Greater Noida)', 'Lucknow', 'Varanasi', 'Prayagraj', 'Kanpur', 'Agra', 'Meerut', 'Gorakhpur', 'Bareilly', 'Aligarh', 'Moradabad', 'Mathura', 'Jhansi', 'Ghaziabad'],
   'Uttarakhand': ['Dehradun', 'Haridwar', 'Nainital', 'Rishikesh', 'Udham Singh Nagar', 'Almora', 'Pauri Garhwal', 'Chamoli', 'Pithoragarh', 'Tehri'],
   'Madhya Pradesh': ['Neemuch', 'Mandsaur', 'Indore', 'Bhopal', 'Ujjain', 'Gwalior', 'Jabalpur', 'Ratlam', 'Rewa', 'Satna', 'Hoshangabad'],
   'Rajasthan': ['Jodhpur', 'Nagaur', 'Jaipur', 'Kota', 'Udaipur', 'Bikaner', 'Ajmer', 'Alwar', 'Barmer', 'Chittorgarh', 'Pali', 'Sikar'],
@@ -117,12 +117,11 @@ const SignUpModal = ({ isOpen, onClose, onSwitchToSignIn }) => {
 
   const [formData, setFormData] = useState(initialFormState)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitResult, setSubmitResult] = useState(null) // { type: 'success' | 'error', message: string }
+  const [submitResult, setSubmitResult] = useState(null)
 
   const handleChange = (event) => {
     const { name, value } = event.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-    // Clear any previous result when user starts typing
     if (submitResult) setSubmitResult(null)
   }
 

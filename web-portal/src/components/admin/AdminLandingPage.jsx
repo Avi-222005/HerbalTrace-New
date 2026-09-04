@@ -180,6 +180,9 @@ const AdminLandingPage = () => {
   const [complaintSender, setComplaintSender] = useState('')
   const [complaintCategory, setComplaintCategory] = useState('Geofence & Location')
   const [complaintSuccess, setComplaintSuccess] = useState('')
+  const [replyTexts, setReplyTexts] = useState({})
+  const [isResolving, setIsResolving] = useState({})
+  const [complaintResolveSuccess, setComplaintResolveSuccess] = useState('')
   const recognitionRef = useRef(null)
 
   // Load logged-in user data
@@ -263,6 +266,49 @@ const AdminLandingPage = () => {
     setTimeout(() => setComplaintSuccess(''), 5000)
   }
 
+  const handleResolveWithReply = async (g) => {
+    const targetId = g.id || g.complaint_id
+    const replyMessage = (replyTexts[targetId] || '').trim() || 'Investigation completed by regulatory administration. Issue verified, action taken, and record archived on ledger.'
+    setIsResolving(prev => ({ ...prev, [targetId]: true }))
+    try {
+      const token = localStorage.getItem('herbaltrace_token')
+      const res = await fetch(`${BACKEND_URL}/api/v1/complaints/${targetId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          status: 'resolved',
+          response: replyMessage
+        })
+      })
+      const result = await res.json()
+      if (!res.ok || !result.success) {
+        throw new Error(result.message || 'Failed to update complaint status')
+      }
+
+      setGrievances(prev => prev.map(item => {
+        if (item.id === targetId || item.complaint_id === targetId) {
+          return {
+            ...item,
+            status: 'RESOLVED',
+            response: replyMessage,
+            responseBy: userData?.fullName || userData?.username || 'System Administrator',
+            responseAt: 'Just now'
+          }
+        }
+        return item
+      }))
+      setComplaintResolveSuccess(`Official reply sent to stakeholder and Complaint ${targetId} marked as RESOLVED!`)
+      setTimeout(() => setComplaintResolveSuccess(''), 5000)
+    } catch (err) {
+      alert(`Error resolving complaint: ${err.message}`)
+    } finally {
+      setIsResolving(prev => ({ ...prev, [targetId]: false }))
+    }
+  }
+
   // Master Data Fetcher
   const loadAllData = async () => {
     const token = localStorage.getItem('herbaltrace_token')
@@ -325,6 +371,9 @@ const AdminLandingPage = () => {
           message: c.description || c.message || 'No description provided',
           date: c.created_at ? new Date(c.created_at).toLocaleString() : 'Recent',
           status: (c.status || 'open').toUpperCase(),
+          response: c.response,
+          responseBy: c.response_by,
+          responseAt: c.response_at ? new Date(c.response_at).toLocaleString() : null,
           audioDuration: 'Voice Dictated'
         }))
         if (liveGrievances.length > 0) {
@@ -1280,44 +1329,94 @@ const AdminLandingPage = () => {
                         <span>Category: <strong className={isDark ? 'text-zinc-200' : 'text-zinc-800'}>{g.category}</strong></span>
                         <span>Subject: <strong className={isDark ? 'text-zinc-200' : 'text-zinc-800'}>{g.subject || g.title || 'Inquiry'}</strong></span>
                         {g.species && <span>Species: <strong className={isDark ? 'text-zinc-200' : 'text-zinc-800'}>{g.species}</strong></span>}
+                                  <div className="space-y-2">
+                        <span className="text-[10px] uppercase font-bold text-zinc-500 block">Stakeholder Grievance Message:</span>
+                        <p className={`p-4 rounded-xl border italic text-xs leading-relaxed ${isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-300' : 'bg-white border-neutral-200 text-zinc-700'}`}>
+                          "{g.message || g.description}"
+                        </p>
                       </div>
 
-                      <p className={`p-4 rounded-xl border italic text-xs leading-relaxed ${isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-300' : 'bg-white border-neutral-200 text-zinc-700'}`}>
-                        "{g.message || g.description}"
-                      </p>
-
-                      <div className="flex items-center justify-end pt-2">
-                        <div className="flex items-center space-x-2">
-                          {String(g.status || '').toUpperCase() !== 'RESOLVED' && (
-                            <button
-                              onClick={async () => {
-                                const targetId = g.id || g.complaint_id
-                                try {
-                                  const token = localStorage.getItem('herbaltrace_token')
-                                  await fetch(`${BACKEND_URL}/api/v1/complaints/${targetId}/status`, {
-                                    method: 'PUT',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                      Authorization: `Bearer ${token}`
-                                    },
-                                    body: JSON.stringify({ status: 'resolved' })
-                                  })
-                                } catch (e) {}
-                                setGrievances(grievances.map(item => (item.id === targetId || item.complaint_id === targetId) ? { ...item, status: 'RESOLVED' } : item))
-                              }}
-                              className="px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition-all shadow-sm"
-                            >
-                              Mark Resolved
-                            </button>
-                          )}
-                          {String(g.status || '').toUpperCase() === 'RESOLVED' && (
-                            <span className="text-emerald-400 text-xs font-bold flex items-center space-x-1">
-                              <CheckCircle className="h-4 w-4" />
-                              <span>Resolution Filed & Archived</span>
+                      {/* If Resolved: Show Official Admin Resolution */}
+                      {String(g.status || '').toUpperCase() === 'RESOLVED' && (
+                        <div className="mt-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-1.5">
+                          <div className="flex items-center justify-between text-emerald-400 font-bold text-xs">
+                            <span className="flex items-center space-x-1.5">
+                              <CheckCircle className="h-4 w-4 text-emerald-400" />
+                              <span>Official Administrative Resolution & Reply:</span>
                             </span>
-                          )}
+                            <span className="text-[11px] text-zinc-400">
+                              {g.responseAt || 'Archived'} by {g.responseBy || 'System Administrator'}
+                            </span>
+                          </div>
+                          <p className="text-zinc-200 text-xs italic pl-5">
+                            "{g.response || 'Investigation completed by regulatory administration. Issue verified and resolved on ledger.'}"
+                          </p>
                         </div>
-                      </div>
+                      )}
+
+                      {/* If Active: Show Admin Reply Box & Action to Resolve */}
+                      {String(g.status || '').toUpperCase() !== 'RESOLVED' && (
+                        <div className="mt-3 pt-3 border-t border-zinc-800/60 space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[11px] font-bold text-emerald-400 flex items-center space-x-1.5">
+                              <MessageCircle className="h-3.5 w-3.5" />
+                              <span>Send Official Reply & Resolve Ticket:</span>
+                            </label>
+                            <span className="text-[10px] text-zinc-400">Reply will be delivered to {g.senderName}</span>
+                          </div>
+                          <textarea
+                            rows={2}
+                            value={replyTexts[g.id || g.complaint_id] || ''}
+                            onChange={(e) => {
+                              const targetId = g.id || g.complaint_id
+                              const val = e.target.value
+                              setReplyTexts(prev => ({ ...prev, [targetId]: val }))
+                            }}
+                            placeholder="Type administrative resolution message (e.g. Issue investigated. Lab re-test scheduled and batch unblocked on ledger)..."
+                            className={`w-full px-3.5 py-2.5 rounded-xl border text-xs focus:border-emerald-500 focus:outline-none ${
+                              isDark ? 'bg-zinc-900 border-zinc-700 text-white placeholder-zinc-500' : 'bg-white border-neutral-300 text-gray-900 placeholder-gray-400'
+                            }`}
+                          />
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1">
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                'Investigation completed. Lab re-test authorized.',
+                                'Batch verified & unblocked on ledger.',
+                                'Geofence coordinates verified with state revenue records.',
+                                'Quality assay dispute reviewed. COA re-issued.'
+                              ].map((template) => (
+                                <button
+                                  key={template}
+                                  type="button"
+                                  onClick={() => {
+                                    const targetId = g.id || g.complaint_id
+                                    setReplyTexts(prev => ({ ...prev, [targetId]: template }))
+                                  }}
+                                  className={`text-[10px] px-2.5 py-1 rounded-lg border transition-all ${
+                                    isDark ? 'bg-zinc-800/80 hover:bg-zinc-700 border-zinc-700 text-zinc-300' : 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-zinc-700'
+                                  }`}
+                                >
+                                  + {template}
+                                </button>
+                              ))}
+                            </div>
+                            <button
+                              onClick={() => handleResolveWithReply(g)}
+                              disabled={isResolving[g.id || g.complaint_id]}
+                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs rounded-xl shadow-md flex items-center justify-center space-x-1.5 transition-all shrink-0 disabled:opacity-50"
+                            >
+                              {isResolving[g.id || g.complaint_id] ? (
+                                <span>Sending...</span>
+                              ) : (
+                                <>
+                                  <Send className="h-3.5 w-3.5" />
+                                  <span>Send Reply & Resolve</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}              </div>
                     </div>
                   ))}
 

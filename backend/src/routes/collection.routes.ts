@@ -131,12 +131,30 @@ router.post('/', authenticate, async (req: Request, res: Response, next: NextFun
       WHERE user_id = ?
     `).get(farmerId);
 
-    const zoneName = farmerData?.location_district || req.body.zoneName || 'Dehradun';
+    // Resolve real-time dynamic zone from GPS coordinates and request payload
+    const parsedLatitude = parseFloat(latitude);
+    const parsedLongitude = parseFloat(longitude);
+    
+    // Resolve real-time dynamic zone strictly from GPS coordinates (Geo-Fencing)
+    let zoneName = req.body.zoneName || req.body.locationName;
+    if (!zoneName || zoneName === 'Bhagalpur' || zoneName === 'Dehradun') {
+      if (parsedLatitude >= 28.30 && parsedLatitude <= 28.70 && parsedLongitude >= 77.30 && parsedLongitude <= 77.70) {
+        zoneName = 'Gautam Buddha Nagar (Noida / Greater Noida), UP';
+      } else if (parsedLatitude >= 28.40 && parsedLatitude <= 28.90 && parsedLongitude >= 76.85 && parsedLongitude <= 77.35) {
+        zoneName = 'South / Central Delhi, Delhi NCR';
+      } else if (parsedLatitude >= 30.10 && parsedLatitude <= 30.50 && parsedLongitude >= 77.90 && parsedLongitude <= 78.30) {
+        zoneName = 'Dehradun / Haridwar Herbal Belt, Uttarakhand';
+      } else if (parsedLatitude >= 24.30 && parsedLatitude <= 25.00 && parsedLongitude >= 74.80 && parsedLongitude <= 75.30) {
+        zoneName = 'Neemuch / Mandsaur Ashwagandha Zone, MP';
+      } else if (farmerData?.location_district) {
+        zoneName = `${farmerData.location_district}, ${farmerData.location_state || ''}`.trim();
+      } else {
+        zoneName = `GPS: ${parsedLatitude.toFixed(4)}°N, ${parsedLongitude.toFixed(4)}°E`;
+      }
+    }
 
     // Parse and validate numeric values
     const parsedQuantity = parseFloat(quantity);
-    const parsedLatitude = parseFloat(latitude);
-    const parsedLongitude = parseFloat(longitude);
     const parsedAltitude = altitude ? parseFloat(altitude) : 250.0;
     const parsedAccuracy = accuracy ? parseFloat(accuracy) : 5.0;
 

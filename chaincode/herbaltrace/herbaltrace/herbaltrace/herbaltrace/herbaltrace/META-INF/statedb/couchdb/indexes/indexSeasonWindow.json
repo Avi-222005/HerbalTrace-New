@@ -1,8 +1,0 @@
-{
-  "index": {
-    "fields": ["species", "startMonth", "endMonth", "active"]
-  },
-  "ddoc": "indexSeasonWindowDoc",
-  "name": "indexSeasonWindow",
-  "type": "json"
-}

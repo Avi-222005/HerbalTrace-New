@@ -97,6 +97,7 @@ const SignInModal = ({ isOpen, onClose, onSwitchToSignUp }) => {
         fullName: result?.data?.user?.fullName,
         email: result?.data?.user?.email,
         role: loggedInRole,
+        mustChangePassword: Boolean(result?.data?.user?.mustChangePassword),
         isLoggedIn: true
       }))
 

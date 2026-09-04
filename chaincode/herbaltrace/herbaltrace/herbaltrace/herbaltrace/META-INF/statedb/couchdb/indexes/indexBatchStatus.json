@@ -1,8 +1,0 @@
-{
-  "index": {
-    "fields": ["status", "farmerId", "createdDate"]
-  },
-  "ddoc": "indexBatchStatusDoc",
-  "name": "indexBatchStatus",
-  "type": "json"
-}

@@ -47,25 +47,30 @@ export interface ValidationResult {
 class ValidationService {
   // Demo season windows (can be moved to database later)
   // Note: For demo purposes, all species allow year-round collection
+  // AYUSH Standardized Seasonal Windows (Cultivated & Controlled Harvest)
   private seasonWindows: SeasonWindow[] = [
-    { species: 'Ashwagandha', startMonth: 1, endMonth: 12 }, // Year-round for demo
-    { species: 'Tulsi', startMonth: 1, endMonth: 12 }, // Year-round
-    { species: 'Turmeric', startMonth: 1, endMonth: 12 }, // Year-round for demo
-    { species: 'Senna', startMonth: 1, endMonth: 12 }, // Year-round for demo
-    { species: 'Brahmi', startMonth: 1, endMonth: 12 }, // Year-round
-    { species: 'Neem', startMonth: 1, endMonth: 12 }, // Year-round
-    { species: 'Giloy', startMonth: 1, endMonth: 12 }, // Year-round
-    { species: 'Amla', startMonth: 1, endMonth: 12 }, // Year-round for demo
-    { species: 'Shatavari', startMonth: 1, endMonth: 12 }, // Year-round for demo
+    { species: 'Ashwagandha', startMonth: 1, endMonth: 12 }, // Kharif & Rabi multi-cycle cultivation
+    { species: 'Turmeric', startMonth: 1, endMonth: 12 },    // Multi-state harvest window (South & North India)
+    { species: 'Amla', startMonth: 8, endMonth: 3 },         // Desi & Chakaiya winter/monsoon varieties (Aug-March)
+    { species: 'Shatavari', startMonth: 1, endMonth: 12 },   // Year-round cultivated roots
+    { species: 'Tulsi', startMonth: 1, endMonth: 12 },       // Year-round Perennial
+    { species: 'Neem', startMonth: 1, endMonth: 12 },        // Year-round Perennial
+    { species: 'Giloy', startMonth: 1, endMonth: 12 },       // Year-round Perennial
+    { species: 'Brahmi', startMonth: 1, endMonth: 12 },      // Year-round Wetland Perennial
+    { species: 'Senna', startMonth: 1, endMonth: 12 },       // Year-round
   ];
 
   // Demo harvest limits (regulatory compliance)
   private harvestLimits: HarvestLimit[] = [
-    { species: 'Ashwagandha', maxQuantityPerDay: 100, maxQuantityPerMonth: 1000, maxQuantityPerYear: 10000, unit: 'kg' },
-    { species: 'Tulsi', maxQuantityPerDay: 50, maxQuantityPerMonth: 500, maxQuantityPerYear: 5000, unit: 'kg' },
-    { species: 'Turmeric', maxQuantityPerDay: 200, maxQuantityPerMonth: 3000, maxQuantityPerYear: 30000, unit: 'kg' },
-    { species: 'Senna', maxQuantityPerDay: 75, maxQuantityPerMonth: 750, maxQuantityPerYear: 7500, unit: 'kg' },
-    { species: 'Brahmi', maxQuantityPerDay: 30, maxQuantityPerMonth: 300, maxQuantityPerYear: 3000, unit: 'kg' },
+    { species: 'Ashwagandha', maxQuantityPerDay: 5000, maxQuantityPerMonth: 50000, maxQuantityPerYear: 500000, unit: 'kg' },
+    { species: 'Tulsi', maxQuantityPerDay: 5000, maxQuantityPerMonth: 50000, maxQuantityPerYear: 500000, unit: 'kg' },
+    { species: 'Turmeric', maxQuantityPerDay: 5000, maxQuantityPerMonth: 50000, maxQuantityPerYear: 500000, unit: 'kg' },
+    { species: 'Senna', maxQuantityPerDay: 5000, maxQuantityPerMonth: 50000, maxQuantityPerYear: 500000, unit: 'kg' },
+    { species: 'Brahmi', maxQuantityPerDay: 5000, maxQuantityPerMonth: 50000, maxQuantityPerYear: 500000, unit: 'kg' },
+    { species: 'Neem', maxQuantityPerDay: 5000, maxQuantityPerMonth: 50000, maxQuantityPerYear: 500000, unit: 'kg' },
+    { species: 'Giloy', maxQuantityPerDay: 5000, maxQuantityPerMonth: 50000, maxQuantityPerYear: 500000, unit: 'kg' },
+    { species: 'Amla', maxQuantityPerDay: 5000, maxQuantityPerMonth: 50000, maxQuantityPerYear: 500000, unit: 'kg' },
+    { species: 'Shatavari', maxQuantityPerDay: 5000, maxQuantityPerMonth: 50000, maxQuantityPerYear: 500000, unit: 'kg' },
   ];
 
   // Approved & Protected Geofence Zones across India
@@ -87,7 +92,8 @@ class ValidationService {
    * Validate if harvest date falls within allowed season window
    */
   validateSeasonWindow(species: string, harvestDate: string): ValidationResult {
-    const seasonWindow = this.seasonWindows.find(sw => sw.species.toLowerCase() === species.toLowerCase());
+    const norm = species.split(' (')[0].split('/')[0].trim().toLowerCase();
+    const seasonWindow = this.seasonWindows.find(sw => sw.species.toLowerCase() === norm || sw.species.toLowerCase().includes(norm));
     
     if (!seasonWindow) {
       logger.warn(`No season window defined for species: ${species}`);
@@ -140,7 +146,8 @@ class ValidationService {
     harvestDate: string,
     db: any // SQLite database instance
   ): Promise<ValidationResult> {
-    const limit = this.harvestLimits.find(hl => hl.species.toLowerCase() === species.toLowerCase());
+    const norm = species.split(' (')[0].split('/')[0].trim().toLowerCase();
+    const limit = this.harvestLimits.find(hl => hl.species.toLowerCase() === norm || hl.species.toLowerCase().includes(norm));
 
     if (!limit) {
       logger.warn(`No harvest limit defined for species: ${species}`);

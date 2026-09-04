@@ -247,21 +247,18 @@ export class FabricClient {
     };
 
     const normalized = (orgName || '').toLowerCase();
-    let key = normalized;
-    if (['farmer', 'farmers', 'farmerscoop'].includes(normalized)) {
-      key = 'farmers';
-    } else if (['lab', 'labs', 'testinglab', 'testinglabs'].includes(normalized)) {
+    let key = 'farmers';
+    if (normalized.includes('lab') || normalized.includes('testing')) {
       key = 'testinglabs';
-    } else if (['processor', 'processors'].includes(normalized)) {
+    } else if (normalized.includes('processor')) {
       key = 'processors';
-    } else if (['manufacturer', 'manufacturers'].includes(normalized)) {
+    } else if (normalized.includes('manufacturer') || normalized.includes('mfg')) {
       key = 'manufacturers';
+    } else {
+      key = 'farmers';
     }
 
-    const candidates = orgAliases[key];
-    if (!candidates || candidates.length === 0) {
-      throw new Error(`Unknown organization: ${orgName}`);
-    }
+    const candidates = orgAliases[key] || ['farmers'];
 
     for (const alias of candidates) {
       const ccpPath = path.join(basePath, `${alias}.herbaltrace.com`, `connection-${alias}.json`);

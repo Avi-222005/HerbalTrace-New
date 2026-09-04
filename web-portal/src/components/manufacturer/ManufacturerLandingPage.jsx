@@ -641,7 +641,7 @@ const ManufacturerLandingPage = () => {
 }
 
 // Product Creation Modal with Smart URL Encoding & QR Generation
-const CreateProductModal = ({ batches, isDark, onClose, onSuccess }) => {
+const CreateProductModal = ({ batches = [], isDark, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     batchId: batches[0]?.dbId || batches[0]?.id || '',
     productName: batches[0] ? `Ayurvedic Pure ${batches[0].herb} Extract Formulation` : '',
@@ -750,27 +750,52 @@ const CreateProductModal = ({ batches, isDark, onClose, onSuccess }) => {
             </div>
           )}
 
-          <div className="p-3 bg-zinc-950/60 rounded-xl border border-zinc-800 text-left text-xs font-mono space-y-1 mb-4">
-            <div className="text-zinc-400">QR Code: <span className="text-emerald-400 font-bold">{createdProduct.qrCode}</span></div>
+          <div className="p-3 bg-zinc-950/60 rounded-xl border border-zinc-800 text-left text-xs font-mono space-y-1 mb-4 select-none">
+            <div className="text-zinc-400">QR Code: <span className="text-emerald-400 font-bold select-all">{createdProduct.qrCode}</span></div>
             <div className="text-zinc-400 truncate">TxID: <span className="text-zinc-300">{createdProduct.blockchainTxId}</span></div>
-            <div className="text-zinc-400 truncate">Scan URL: <span className="text-primary-400">{scanUrl}</span></div>
+            <div className="text-zinc-400 truncate">Scan URL: <span className="text-primary-400 select-all">{scanUrl}</span></div>
           </div>
 
-          <div className="flex space-x-3">
-            <a
-              href={createdProduct.qrCodeImage}
-              download={`QR-${createdProduct.qrCode}.png`}
-              className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center space-x-1.5"
-            >
-              <Download className="h-4 w-4" />
-              <span>Download QR</span>
-            </a>
-            <button
-              onClick={() => { onSuccess(); onClose(); }}
-              className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs rounded-xl border border-zinc-700"
-            >
-              Done
-            </button>
+          <div className="space-y-2.5">
+            <div className="flex space-x-3">
+              <a
+                href={scanUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center space-x-1.5 transition-all"
+              >
+                <Eye className="h-4 w-4" />
+                <span>Scan Test Page</span>
+              </a>
+              <a
+                href={createdProduct.qrCodeImage}
+                download={`QR-${createdProduct.qrCode}.png`}
+                className="flex-1 py-2.5 bg-teal-700 hover:bg-teal-600 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center space-x-1.5 transition-all"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download QR</span>
+              </a>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(scanUrl)
+                  alert('Verification URL copied to clipboard!')
+                }}
+                className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs rounded-xl border border-zinc-700 flex items-center justify-center space-x-1.5"
+              >
+                <Copy className="h-3.5 w-3.5" />
+                <span>Copy URL</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { onSuccess(); onClose(); }}
+                className="flex-1 py-2 bg-zinc-700 hover:bg-zinc-600 text-white font-bold text-xs rounded-xl"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>

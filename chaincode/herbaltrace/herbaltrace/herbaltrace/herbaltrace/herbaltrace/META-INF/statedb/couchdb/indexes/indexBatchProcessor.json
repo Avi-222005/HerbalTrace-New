@@ -1,8 +1,0 @@
-{
-  "index": {
-    "fields": ["processorId", "status", "assignedDate"]
-  },
-  "ddoc": "indexBatchProcessorDoc",
-  "name": "indexBatchProcessor",
-  "type": "json"
-}

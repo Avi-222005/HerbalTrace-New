@@ -1,8 +1,0 @@
-{
-  "index": {
-    "fields": ["farmerId", "harvestDate", "status", "species"]
-  },
-  "ddoc": "indexCollectionFarmerDoc",
-  "name": "indexCollectionFarmer",
-  "type": "json"
-}

@@ -10,6 +10,7 @@ import { getFabricClient } from '../fabric/fabricClient';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
+import os from 'os';
 
 const router = Router();
 
@@ -182,8 +183,45 @@ router.post('/products', authenticate, authorize('Admin', 'Manufacturer'), async
     }
 
     // 3. Generate QR code image BEFORE saving to database
-    // Dynamically resolve frontend host for authentic scanning
-    const frontendBaseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    // Dynamically resolve frontend host for authentic LAN & mobile phone scanning
+    const getLocalIp = () => {
+      try {
+        const interfaces = os.networkInterfaces();
+        for (const ifaceName of Object.keys(interfaces)) {
+          const iface = interfaces[ifaceName];
+          if (!iface) continue;
+          for (const alias of iface) {
+            if (alias.family === 'IPv4' && !alias.internal && alias.address !== '127.0.0.1') {
+              return alias.address;
+            }
+          }
+        }
+      } catch (_) {}
+      return '192.168.9.55';
+    };
+
+    const localLanIp = getLocalIp();
+    let frontendBaseUrl = process.env.FRONTEND_URL || process.env.PUBLIC_SCAN_URL;
+    if (!frontendBaseUrl) {
+      const clientOrigin = req.headers.origin || req.headers.referer;
+      if (clientOrigin) {
+        try {
+          const parsed = new URL(clientOrigin as string);
+          frontendBaseUrl = `${parsed.protocol}//${parsed.host}`;
+        } catch (e) {}
+      }
+    }
+    if (!frontendBaseUrl) {
+      const host = req.get('host') || `${localLanIp}:3000`;
+      const clientHost = host.includes(':3000') ? host.replace(':3000', ':3001') : (host.includes(':') ? host : `${host}:3001`);
+      frontendBaseUrl = `http://${clientHost}`;
+    }
+
+    // Replace localhost or 127.0.0.1 with local LAN IP so Google Lens and smartphones can reach it!
+    if (frontendBaseUrl.includes('localhost') || frontendBaseUrl.includes('127.0.0.1')) {
+      frontendBaseUrl = frontendBaseUrl.replace(/localhost|127\.0\.0\.1/g, localLanIp);
+    }
+
     const verificationUrl = `${frontendBaseUrl}/verify/${qrCode}`;
     
     const qrPayloadTemp = {

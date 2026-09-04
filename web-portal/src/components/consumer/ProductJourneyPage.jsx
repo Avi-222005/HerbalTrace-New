@@ -49,8 +49,11 @@ const ProductJourneyPage = () => {
     const fetchProvenance = async () => {
       setIsLoading(true)
       try {
-        const targetId = productId || 'QR-DEFAULT'
-        const res = await fetch(`${BACKEND_URL}/api/v1/qr/verify/${targetId}`)
+        const rawParam = decodeURIComponent(productId || 'QR-DEFAULT').trim()
+        const match = rawParam.match(/(QR-[A-Za-z0-9-]+|BATCH-[A-Za-z0-9-]+|PROD-[A-Za-z0-9-]+|HT-[A-Za-z0-9-]+)/i)
+        const targetId = match ? match[1] : rawParam.split(/\s+/)[0]
+
+        const res = await fetch(`${BACKEND_URL}/api/v1/qr/verify/${encodeURIComponent(targetId)}`)
         const json = await res.json()
         if (json.success && json.data) {
           setLiveData(json.data)
@@ -71,9 +74,11 @@ const ProductJourneyPage = () => {
   const qcTests = liveData?.qualityTests || []
   const blockchain = liveData?.blockchain || {}
 
-  const productName = prod.name || (batch.species ? `Ayurvedic Pure ${batch.species} Formulation` : 'Ayurvedic Herbal Formulation')
-  const speciesName = batch.species || 'Tulsi (Holy Basil)'
-  const batchNumber = batch.batchNumber || prod.batchId || productId || 'BATCH-TULSI-2026'
+  // Resolve dynamic botanical species
+  const rawSpecies = batch.species || prod.name?.split(' ')[0] || (collections[0]?.species) || 'Tulsi'
+  const speciesName = rawSpecies.replace(/sp\.|extract|pure/gi, '').trim()
+  const productName = prod.name || (batch.species ? `Ayurvedic Pure ${speciesName} Formulation` : 'Ayurvedic Herbal Formulation')
+  const batchNumber = batch.batchNumber || prod.batchId || (productId ? productId.split(' ')[0] : 'BATCH-2026')
   const expiryDate = prod.expiryDate || 'Dec 2028'
   const manufacturerName = prod.manufacturer || 'Ayush GMP Certified Processing Unit'
   const txHash = prod.blockchainTx || batch.blockchainTx || '0x198ced6d6ef34ab6bce9b9e9fd41174d4c0dcb5ef896482c27669d5d10b78107'
@@ -330,7 +335,7 @@ const ProductJourneyPage = () => {
 
         {/* 3D Botanical Specimen & AR Monograph with Usage Guide */}
         <Botanical3DViewer 
-          species={speciesName.includes('Ashwagandha') ? 'Ashwagandha' : 'Tulsi'} 
+          species={speciesName} 
           productName={productName} 
         />
 

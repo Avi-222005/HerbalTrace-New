@@ -115,7 +115,7 @@ const Footer = () => {
               whileTap={{ scale: 0.95 }}
             >
               <a 
-                href="https://store8.gofile.io/download/web/08f5f051-f3e5-42f1-aa3f-60f3f4b56629/app-release.apk" 
+                href="https://github.com/Avi-222005/Herbal-Trace-App/releases/download/v1.0.0/HerbalTrace.apk" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-semibold text-sm transition-all duration-300 shadow-lg hover:shadow-xl"

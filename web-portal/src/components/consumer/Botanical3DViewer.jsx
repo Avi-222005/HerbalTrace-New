@@ -26,7 +26,7 @@ const Botanical3DViewer = ({ species = 'Tulsi', productName = 'Ayurvedic Botanic
   const [arError, setArError] = useState(null)
   const videoRef = useRef(null)
 
-  // Ayurvedic Data for Species
+  // Ayurvedic Data for All Major AYUSH Botanical Species
   const ayurvedicData = {
     'Tulsi': {
       botanicalName: 'Ocimum sanctum (Holy Basil)',
@@ -73,10 +73,191 @@ const Botanical3DViewer = ({ species = 'Tulsi', productName = 'Ayurvedic Botanic
         stem: { name: 'Aerial Stem', role: 'Structural bioflavonoids and antioxidant reserves.' },
         flower: { name: 'Root & Tuber', role: 'Primary Ayurvedic source for standardized Withanolides.' }
       }
+    },
+    'Brahmi': {
+      botanicalName: 'Bacopa monnieri (Water Hyssop)',
+      family: 'Plantaginaceae',
+      dosha: { vata: 'Pacifies (↓)', pitta: 'Cools (↓↓)', kapha: 'Balances (↓)' },
+      dravyaguna: {
+        rasa: 'Tikta (Bitter), Kashaya (Astringent)',
+        guna: 'Laghu (Light), Sara (Flowing)',
+        virya: 'Sheeta (Cooling)',
+        vipaka: 'Madhura (Sweet Post-Digestive)'
+      },
+      activePhyto: 'Bacosides (Bacoside A & B > 20%), Hersaponin',
+      clinicalUsage: {
+        dosage: '250–500mg extract twice daily with meals.',
+        anupana: 'Warm cow ghee or water.',
+        benefits: 'Medhya Rasayana (Brain Tonic), memory retention, neuroprotection, stress relief.',
+        contraindications: 'May cause mild stomach upset on empty stomach; take after meals.'
+      },
+      parts: {
+        leaf: { name: 'Succulent Leaf', role: 'Primary reservoir of cognitive Bacoside triterpenoid saponins.' },
+        stem: { name: 'Creeping Stem', role: 'High antioxidant flavonoids and cellular protective saponins.' },
+        flower: { name: 'Small Flower', role: 'Mild aromatic compounds used in classical Medhya taila.' }
+      }
+    },
+    'Neem': {
+      botanicalName: 'Azadirachta indica (Indian Lilac)',
+      family: 'Meliaceae',
+      dosha: { vata: 'Increases (↑)', pitta: 'Cools (↓↓)', kapha: 'Pacifies (↓↓)' },
+      dravyaguna: {
+        rasa: 'Tikta (Bitter), Kashaya (Astringent)',
+        guna: 'Laghu (Light), Ruksha (Dry)',
+        virya: 'Sheeta (Cooling)',
+        vipaka: 'Katu (Pungent)'
+      },
+      activePhyto: 'Azadirachtin, Nimbin, Nimbidin, Quercetin',
+      clinicalUsage: {
+        dosage: '250mg extract or 1 capsule daily after breakfast.',
+        anupana: 'Lukewarm water.',
+        benefits: 'Blood purifier (Raktashodhaka), skin rejuvenation, metabolic detox, antimicrobial.',
+        contraindications: 'Avoid in excessive Vata imbalance or infants.'
+      },
+      parts: {
+        leaf: { name: 'Compound Leaf', role: 'Purifying bitter triterpenes for skin and blood detoxification.' },
+        stem: { name: 'Bark & Stem', role: 'Concentrated tannins and anti-inflammatory nimbidin.' },
+        flower: { name: 'White Blossom', role: 'Subtle cooling aromatic extracts for Pitta pacification.' }
+      }
+    },
+    'Turmeric': {
+      botanicalName: 'Curcuma longa (Haridra)',
+      family: 'Zingiberaceae',
+      dosha: { vata: 'Balances (↓)', pitta: 'Neutral (↔)', kapha: 'Pacifies (↓↓)' },
+      dravyaguna: {
+        rasa: 'Tikta (Bitter), Katu (Pungent)',
+        guna: 'Laghu (Light), Ruksha (Dry)',
+        virya: 'Ushna (Warm)',
+        vipaka: 'Katu (Pungent)'
+      },
+      activePhyto: 'Curcuminoids (Curcumin 95%, Demethoxycurcumin), Turmerones',
+      clinicalUsage: {
+        dosage: '500mg standardized extract with 5mg Piperine twice daily.',
+        anupana: 'Warm milk or water with ghee.',
+        benefits: 'Anti-inflammatory, powerful antioxidant, joint mobility, cardiovascular health.',
+        contraindications: 'Caution with high-dose bile duct obstruction.'
+      },
+      parts: {
+        leaf: { name: 'Broad Green Leaf', role: 'Aromatic essential oils used for traditional steam therapies.' },
+        stem: { name: 'Rhizome Finger', role: 'Rich golden Curcumin core certified for pharmaceutical potency.' },
+        flower: { name: 'Inflorescence Spike', role: 'Mild bioflavonoids supporting systemic gut equilibrium.' }
+      }
+    },
+    'Ginger': {
+      botanicalName: 'Zingiber officinale (Shunti / Adrak)',
+      family: 'Zingiberaceae',
+      dosha: { vata: 'Pacifies (↓↓)', pitta: 'Mild Increase (↑)', kapha: 'Pacifies (↓↓)' },
+      dravyaguna: {
+        rasa: 'Katu (Pungent), Madhura (Sweet in Dry Shunti)',
+        guna: 'Guru (Heavy), Snigdha (Unctuous in dry)',
+        virya: 'Ushna (Heating)',
+        vipaka: 'Madhura (Sweet Post-Digestive)'
+      },
+      activePhyto: 'Gingerols (6-Gingerol > 5%), Shogaols, Zingiberene',
+      clinicalUsage: {
+        dosage: '250–500mg standardized extract before meals.',
+        anupana: 'Warm water or honey.',
+        benefits: 'Digestive fire stimulant (Deepana-Pachana), motion sickness relief, circulation enhancer.',
+        contraindications: 'Avoid in high Pitta bleeding disorders.'
+      },
+      parts: {
+        leaf: { name: 'Leaf Blade', role: 'Aromatic zingiberene notes aiding digestion.' },
+        stem: { name: 'Underground Rhizome', role: 'Bioactive gingerol reservoir for metabolic ignition.' },
+        flower: { name: 'Cone Inflorescence', role: 'Antioxidant bracts utilized in classic rasayana teas.' }
+      }
+    },
+    'Amla': {
+      botanicalName: 'Phyllanthus emblica (Indian Gooseberry)',
+      family: 'Phyllanthaceae',
+      dosha: { vata: 'Pacifies (↓)', pitta: 'Pacifies (↓↓)', kapha: 'Balances (↓)' },
+      dravyaguna: {
+        rasa: 'Pancha Rasa (All 5 tastes except salty), predominantly Amla (Sour)',
+        guna: 'Laghu (Light), Ruksha (Dry)',
+        virya: 'Sheeta (Cooling)',
+        vipaka: 'Madhura (Sweet Post-Digestive)'
+      },
+      activePhyto: 'Natural Vitamin C (Ascorbic Acid), Emblicanins, Ellagic Acid',
+      clinicalUsage: {
+        dosage: '500–1000mg extract twice daily.',
+        anupana: 'Warm water or honey.',
+        benefits: 'Universal Rasayana, immune defense, collagen support, ophthalmic health (Chakshushya).',
+        contraindications: 'Extremely safe; suitable for all age groups.'
+      },
+      parts: {
+        leaf: { name: 'Feathery Leaf', role: 'Bioflavonoids supporting renal and metabolic ease.' },
+        stem: { name: 'Woody Branch', role: 'Tannins supporting capillary strength.' },
+        flower: { name: 'Succulent Berry', role: 'Richest natural source of thermo-stable Vitamin C.' }
+      }
+    },
+    'Shatavari': {
+      botanicalName: 'Asparagus racemosus',
+      family: 'Asparagaceae',
+      dosha: { vata: 'Pacifies (↓↓)', pitta: 'Cools (↓↓)', kapha: 'Increases slightly (↑)' },
+      dravyaguna: {
+        rasa: 'Madhura (Sweet), Tikta (Bitter)',
+        guna: 'Guru (Heavy), Snigdha (Unctuous)',
+        virya: 'Sheeta (Cooling)',
+        vipaka: 'Madhura (Sweet)'
+      },
+      activePhyto: 'Shatavarins (I-IV Steroidal Saponins), Isoflavones',
+      clinicalUsage: {
+        dosage: '500mg extract twice daily.',
+        anupana: 'Warm milk or ghee.',
+        benefits: 'Hormonal balance, female reproductive vitality, mucosal gut protection, adaptogen.',
+        contraindications: 'Caution in estrogen-sensitive conditions.'
+      },
+      parts: {
+        leaf: { name: 'Needle Cladode', role: 'Protective resinous antioxidants.' },
+        stem: { name: 'Climbing Stem', role: 'Structural polysaccharides.' },
+        flower: { name: 'Tuberous Root', role: 'Steroidal saponins providing deep cellular nourishment.' }
+      }
+    },
+    'Giloy': {
+      botanicalName: 'Tinospora cordifolia (Guduchi / Amrita)',
+      family: 'Menispermaceae',
+      dosha: { vata: 'Balances (↓)', pitta: 'Balances (↓)', kapha: 'Balances (↓) - Tridosha Shamaka' },
+      dravyaguna: {
+        rasa: 'Tikta (Bitter), Kashaya (Astringent)',
+        guna: 'Laghu (Light), Snigdha (Unctuous)',
+        virya: 'Ushna (Warm)',
+        vipaka: 'Madhura (Sweet Post-Digestive)'
+      },
+      activePhyto: 'Tinosporaside, Cordifolioside A, Berberine, Giloin',
+      clinicalUsage: {
+        dosage: '500mg standardized extract twice daily.',
+        anupana: 'Warm water or honey.',
+        benefits: 'Supreme Immunomodulator (Rasayana), fever detox, liver protection, glucose balance.',
+        contraindications: 'Safe for long term use under clinical dosage.'
+      },
+      parts: {
+        leaf: { name: 'Heart-Shaped Leaf', role: 'Chlorophyll & antioxidant flavonoids.' },
+        stem: { name: 'Mature Aerial Stem', role: 'Primary Ayurvedic bitter extract certified for immunity.' },
+        flower: { name: 'Raceme Bloom', role: 'Essential oils aiding cellular regeneration.' }
+      }
     }
   }
 
-  const currentAyurveda = ayurvedicData[species] || ayurvedicData['Tulsi']
+  // Resolve matching species safely
+  const resolveSpecies = (name) => {
+    if (!name) return 'Tulsi'
+    const lower = name.toLowerCase()
+    for (const key of Object.keys(ayurvedicData)) {
+      if (lower.includes(key.toLowerCase())) return key
+    }
+    if (lower.includes('basil')) return 'Tulsi'
+    if (lower.includes('ginseng') || lower.includes('withania')) return 'Ashwagandha'
+    if (lower.includes('bacopa') || lower.includes('brahmi')) return 'Brahmi'
+    if (lower.includes('azadirachta') || lower.includes('neem')) return 'Neem'
+    if (lower.includes('curcuma') || lower.includes('haldi') || lower.includes('turmeric')) return 'Turmeric'
+    if (lower.includes('ginger') || lower.includes('adrak') || lower.includes('shunti')) return 'Ginger'
+    if (lower.includes('amla') || lower.includes('emblica') || lower.includes('gooseberry')) return 'Amla'
+    if (lower.includes('shatavari') || lower.includes('asparagus')) return 'Shatavari'
+    if (lower.includes('giloy') || lower.includes('guduchi') || lower.includes('tinospora')) return 'Giloy'
+    return 'Tulsi'
+  }
+
+  const resolvedSpeciesKey = resolveSpecies(species)
+  const currentAyurveda = ayurvedicData[resolvedSpeciesKey] || ayurvedicData['Tulsi']
 
   // Three.js 3D Procedural Botanical Model
   useEffect(() => {

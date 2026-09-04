@@ -1,8 +1,0 @@
-{
-  "index": {
-    "fields": ["farmerId", "species", "season", "active"]
-  },
-  "ddoc": "indexHarvestLimitDoc",
-  "name": "indexHarvestLimit",
-  "type": "json"
-}

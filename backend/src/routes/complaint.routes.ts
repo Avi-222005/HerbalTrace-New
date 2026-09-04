@@ -221,7 +221,8 @@ router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
 router.put('/:id/status', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { status, assignedTo } = req.body;
+    const { status, assignedTo, response, reply } = req.body;
+    const replyText = response || reply;
     const user = req.user!;
 
     if (user.role !== 'Admin') {
@@ -240,11 +241,20 @@ router.put('/:id/status', authenticate, async (req: AuthRequest, res: Response) 
       });
     }
 
-    const result = db.prepare(`
-      UPDATE complaints 
-      SET status = ?, assigned_to = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE complaint_id = ? OR id = ?
-    `).run(normalizedStatus, assignedTo || null, id, id);
+    let result;
+    if (replyText) {
+      result = db.prepare(`
+        UPDATE complaints 
+        SET status = ?, assigned_to = ?, response = ?, response_by = ?, response_at = datetime('now'), updated_at = datetime('now')
+        WHERE complaint_id = ? OR id = ?
+      `).run(normalizedStatus, assignedTo || null, replyText, user.fullName || user.username || 'System Administrator', id, id);
+    } else {
+      result = db.prepare(`
+        UPDATE complaints 
+        SET status = ?, assigned_to = ?, updated_at = datetime('now')
+        WHERE complaint_id = ? OR id = ?
+      `).run(normalizedStatus, assignedTo || null, id, id);
+    }
 
     if (result.changes === 0) {
       return res.status(404).json({

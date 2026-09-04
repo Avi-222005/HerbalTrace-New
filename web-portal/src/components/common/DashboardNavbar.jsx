@@ -104,6 +104,36 @@ const DashboardNavbar = ({
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordStatus, setPasswordStatus] = useState({ loading: false, error: '', success: '' })
+  const [isFirstLoginPrompt, setIsFirstLoginPrompt] = useState(false)
+
+  // First-time login detection for users with temporary passwords
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('herbaltrace_user')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.mustChangePassword) {
+          setIsFirstLoginPrompt(true)
+          setSettingsTab('password')
+          setShowSettingsModal(true)
+        }
+      }
+    } catch (e) {}
+  }, [])
+
+  const handleSkipPasswordChange = () => {
+    try {
+      const stored = localStorage.getItem('herbaltrace_user')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        parsed.mustChangePassword = false
+        localStorage.setItem('herbaltrace_user', JSON.stringify(parsed))
+      }
+    } catch (e) {}
+    setIsFirstLoginPrompt(false)
+    setShowSettingsModal(false)
+    setPasswordStatus({ loading: false, error: '', success: '' })
+  }
 
   // Dynamic Real-time Role-specific notifications
   const [notifications, setNotifications] = useState([])
@@ -638,6 +668,18 @@ const DashboardNavbar = ({
               {/* Password Tab Content */}
               {settingsTab === 'password' && (
                 <form onSubmit={handlePasswordChange} className="p-6 space-y-4">
+                  {isFirstLoginPrompt && (
+                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-400 text-xs space-y-1">
+                      <p className="font-bold flex items-center space-x-1.5">
+                        <Key className="h-4 w-4 text-amber-400" />
+                        <span>First-Time Login Security Setup</span>
+                      </p>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed">
+                        You are logged in with a temporary password. You can set your personal password now, or skip and change it anytime from Settings.
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <label className="block text-xs font-semibold mb-1.5">
                       Current Password
@@ -701,15 +743,27 @@ const DashboardNavbar = ({
                   )}
 
                   <div className="pt-3 flex space-x-3">
-                    <button
-                      type="button"
-                      onClick={() => setShowSettingsModal(false)}
-                      className={`flex-1 py-3 rounded-xl text-xs font-bold transition-colors ${
-                        isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-neutral-200 text-zinc-700 hover:bg-neutral-300'
-                      }`}
-                    >
-                      Close
-                    </button>
+                    {isFirstLoginPrompt ? (
+                      <button
+                        type="button"
+                        onClick={handleSkipPasswordChange}
+                        className={`flex-1 py-3 rounded-xl text-xs font-bold transition-colors ${
+                          isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-neutral-200 text-zinc-700 hover:bg-neutral-300'
+                        }`}
+                      >
+                        Skip for Now
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowSettingsModal(false)}
+                        className={`flex-1 py-3 rounded-xl text-xs font-bold transition-colors ${
+                          isDark ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-neutral-200 text-zinc-700 hover:bg-neutral-300'
+                        }`}
+                      >
+                        Close
+                      </button>
+                    )}
                     <button
                       type="submit"
                       disabled={passwordStatus.loading}

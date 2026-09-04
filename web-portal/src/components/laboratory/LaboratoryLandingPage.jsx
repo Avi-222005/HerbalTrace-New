@@ -19,6 +19,8 @@ import {
   Beaker,
   ChevronRight,
   ShieldCheck,
+  Shield,
+  Sparkles,
   Send,
   Loader2,
   Check,
@@ -311,7 +313,12 @@ const LaboratoryLandingPage = () => {
               key={stat.id}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`p-6 rounded-3xl border transition-all ${
+              onClick={() => {
+                if (stat.id === 1) setActiveTab('queue')
+                else if (stat.id === 2 || stat.id === 3) setActiveTab('certificates')
+                else if (stat.id === 4) setActiveTab('analytics')
+              }}
+              className={`p-6 rounded-3xl border transition-all cursor-pointer hover:border-emerald-500/50 hover:shadow-lg ${
                 isDark ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-neutral-200 text-gray-900 shadow-sm'
               }`}
             >
@@ -1161,5 +1168,67 @@ const BatchAuthenticityModal = ({ batch, isDark, onClose, onProceedToTest }) => 
     </div>
   )
 }
+
+// Analytics & Telemetry Section
+const AnalyticsSection = ({ isDark }) => (
+  <div className="space-y-6">
+    <div className="grid md:grid-cols-3 gap-4">
+      <div className={`p-6 rounded-2xl border ${
+        isDark ? 'bg-zinc-950/60 border-zinc-800' : 'bg-neutral-50 border-neutral-200'
+      }`}>
+        <h4 className="font-bold text-xs text-zinc-400">Overall Quality Pass Rate</h4>
+        <p className="text-3xl font-extrabold text-emerald-500 mt-2">100%</p>
+        <p className="text-xs text-zinc-500 mt-1">All processed batches passed AYUSH Pharmacopoeia limits</p>
+      </div>
+
+      <div className={`p-6 rounded-2xl border ${
+        isDark ? 'bg-zinc-950/60 border-zinc-800' : 'bg-neutral-50 border-neutral-200'
+      }`}>
+        <h4 className="font-bold text-xs text-zinc-400">Average Turnaround Time</h4>
+        <p className="text-3xl font-extrabold text-blue-500 mt-2">3.8 hrs</p>
+        <p className="text-xs text-zinc-500 mt-1">NABL compliant fast-track batch clearance</p>
+      </div>
+
+      <div className={`p-6 rounded-2xl border ${
+        isDark ? 'bg-zinc-950/60 border-zinc-800' : 'bg-neutral-50 border-neutral-200'
+      }`}>
+        <h4 className="font-bold text-xs text-zinc-400">NABL ISO/IEC 17025 Audit</h4>
+        <p className="text-3xl font-extrabold text-teal-400 mt-2">Certified</p>
+        <p className="text-xs text-zinc-500 mt-1">Endorsed by TestingLabsMSP node</p>
+      </div>
+    </div>
+
+    <div className={`p-6 rounded-3xl border space-y-4 ${
+      isDark ? 'bg-zinc-950/60 border-zinc-800' : 'bg-neutral-50 border-neutral-200'
+    }`}>
+      <h4 className="font-bold text-sm">AYUSH Pharmacopoeia Standard Assay Compliance</h4>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+        <div className="p-3.5 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-1">
+          <span className="text-zinc-500 text-[10px] block font-mono">MOISTURE CONTENT</span>
+          <span className="font-bold text-emerald-400">8.2% avg (Pass ≤ 10%)</span>
+          <p className="text-[10px] text-zinc-500">Karl Fischer Titration</p>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-1">
+          <span className="text-zinc-500 text-[10px] block font-mono">HEAVY METALS (ICP-MS)</span>
+          <span className="font-bold text-emerald-400">Lead 0.8 ppm (Pass ≤ 10)</span>
+          <p className="text-[10px] text-zinc-500">Atomic Spectroscopy</p>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-1">
+          <span className="text-zinc-500 text-[10px] block font-mono">DNA BARCODING</span>
+          <span className="font-bold text-teal-400">100% rbcL & matK Match</span>
+          <p className="text-[10px] text-zinc-500">Genetic Sequencing</p>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-zinc-900 border border-zinc-800 space-y-1">
+          <span className="text-zinc-500 text-[10px] block font-mono">HPLC PHYTOCHEMICALS</span>
+          <span className="font-bold text-emerald-400">Pharmacopoeia Grade A</span>
+          <p className="text-[10px] text-zinc-500">High-Performance Liquid Chrom.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+)
 
 export default LaboratoryLandingPage

@@ -75,12 +75,22 @@ build/
 *.bak
 *.backup
 
-# Git submodules
-web-portal-cloned/
-
-# Temporary files
-*.tmp
-temp/
-tmp/
+# Flutter / Mobile App
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+mobile-app/build/
+**/android/.gradle/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+app.*.symbols
+app.*.map.json
 *.zip
+*.apk
+
+
 
